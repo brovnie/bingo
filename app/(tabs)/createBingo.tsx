@@ -7,6 +7,7 @@ import {
   Alert,
   FlatList,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import React, { useState } from 'react';
 
@@ -15,6 +16,8 @@ export default function CreateBingo() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [items, setItems] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const addItem = () => {
     if (title === '' || description === '') return;
@@ -29,7 +32,13 @@ export default function CreateBingo() {
   };
 
   const renderGridItem = ({ item }) => (
-    <TouchableOpacity style={styles.gridItem}>
+    <TouchableOpacity
+      style={styles.gridItem}
+      onPress={() => {
+        setSelectedItem(item);
+        setModalVisible(true);
+      }}
+    >
       <Text style={styles.gridItemText}>{item.title}</Text>
     </TouchableOpacity>
   );
@@ -37,6 +46,11 @@ export default function CreateBingo() {
   // Here you can navigate to another screen or perform any other action
   const handleFinalize = () =>
     Alert.alert('Game Ready', `Game "${gameName}" is ready with 9 items.`);
+
+  const deleteThisItem = (itemId) => {
+    setItems(items.filter((item) => item.id !== itemId));
+    setModalVisible(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -78,6 +92,39 @@ export default function CreateBingo() {
       {items.length === 9 && (
         <Button title="Finalize/Generate" onPress={handleFinalize} />
       )}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {selectedItem && (
+              <>
+                <Text style={styles.modalTitle}>{selectedItem.title}</Text>
+                <Text style={styles.modalDescription}>
+                  {selectedItem.description}
+                </Text>
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => deleteThisItem(selectedItem.id)}
+                  >
+                    <Text style={styles.buttonText}>Delete Item</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <Text style={styles.buttonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -102,6 +149,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
   },
+  finalizeContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
   grid: {
     marginTop: 20,
   },
@@ -116,5 +167,47 @@ const styles = StyleSheet.create({
   },
   gridItemText: {
     fontSize: 18,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    marginBottom: 10,
+  },
+  modalDescription: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 5,
+    margin: 5,
+  },
+  closeButton: {
+    backgroundColor: 'black',
+    padding: 10,
+    borderRadius: 5,
+    margin: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
   },
 });
