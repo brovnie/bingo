@@ -8,6 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   Modal,
+  KeyboardAvoidingView,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -31,10 +32,26 @@ export default function CreateBingo() {
       return Alert.alert('Error', 'You can only add 9 items.');
     }
 
-    setItems([...items, { id: items.length + 1, title, description }]);
-    saveData();
+    // save data bugs out on 9th element
+    const newItems = [...items, { id: getNextID(), title, description }];
+    setItems(newItems);
+    try {
+      AsyncStorage.setItem("items", JSON.stringify(newItems));
+    } catch (error) {
+      console.error("Failed to save data", error);
+    }
+
     setTitle('');
     setDescription('');
+  };
+
+  const getNextID = () => {
+    return items.length === 0
+      ? 1
+      : items.reduce(
+          (max, item) => (item.id > max ? item.id : max),
+          items[0].id
+        ) + 1;
   };
 
   const renderGridItem = ({ item }) => (
@@ -49,14 +66,21 @@ export default function CreateBingo() {
     </TouchableOpacity>
   );
 
-  // Here you can navigate to another screen or perform any other action
+  // TODO: navigate to another screen
   const handleFinalize = () => {
     saveData();
-    Alert.alert('Game Ready', `Game "${gameName}" is ready with 9 items.`);
+    Alert.alert("Game Ready", `Game "${gameName}" is ready with 9 items.`);
   };
+
   const deleteThisItem = (itemId) => {
-    setItems(items.filter((item) => item.id !== itemId));
-    saveData();
+    // save data bugs out on last element
+    const newItems = items.filter((item) => item.id !== itemId);
+    setItems(newItems);
+    try {
+      AsyncStorage.setItem("items", JSON.stringify(newItems));
+    } catch (error) {
+      console.error("Failed to save data", error);
+    }
     setModalVisible(false);
   };
 
@@ -85,88 +109,90 @@ export default function CreateBingo() {
     }
   };
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bingo Game Setup</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Game Name"
-        value={gameName}
-        onChangeText={setGameName}
-      />
-      {items.length < 9 && (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Item Title"
-            value={title}
-            onChangeText={setTitle}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Item Description"
-            value={description}
-            onChangeText={setDescription}
-          />
-          <Button title="Add Item" onPress={addItem} />
-        </>
-      )}
-
-      {items.length > 0 && (
-        <View style={styles.grid}>
-          <FlatList
-            data={items}
-            renderItem={renderGridItem}
-            keyExtractor={(item) => item.id.toString()}
-            numColumns={3}
-          />
-        </View>
-      )}
-      {items.length === 9 && (
-        <Button title="Finalize/Generate" onPress={handleFinalize} />
-      )}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {selectedItem && (
-              <>
-                <Text style={styles.modalTitle}>{selectedItem.title}</Text>
-                <Text style={styles.modalDescription}>
-                  {selectedItem.description}
-                </Text>
-                <View style={styles.buttonRow}>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => deleteThisItem(selectedItem.id)}
-                  >
-                    <Text style={styles.buttonText}>Delete Item</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setModalVisible(false)}
-                  >
-                    <Text style={styles.buttonText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
+      <View style={styles.container}>
+        <Text style={styles.title}>Bingo Game Setup</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Game Name"
+          value={gameName}
+          onChangeText={setGameName}
+        />
+        {items.length < 9 && (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Item Title"
+              value={title}
+              onChangeText={setTitle}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Item Description"
+              value={description}
+              onChangeText={setDescription}
+            />
+            <Button title="Add Item" onPress={addItem} />
+          </>
+        )}
+        {items.length === 9 && (
+          <Button title="Finalize" onPress={handleFinalize} />
+        )}
+        {items.length > 0 && (
+          <View style={styles.grid}>
+            <FlatList
+              data={items}
+              renderItem={renderGridItem}
+              keyExtractor={(item) => item.id.toString()}
+              numColumns={3}
+            />
           </View>
-        </View>
-      </Modal>
-    </View>
+        )}
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              {selectedItem && (
+                <>
+                  <Text style={styles.modalTitle}>{selectedItem.title}</Text>
+                  <Text style={styles.modalDescription}>
+                    {selectedItem.description}
+                  </Text>
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => deleteThisItem(selectedItem.id)}
+                    >
+                      <Text style={styles.buttonText}>Delete Item</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.closeButton}
+                      onPress={() => setModalVisible(false)}
+                    >
+                      <Text style={styles.buttonText}>Close</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    marginTop: 40,
   },
   title: {
     fontSize: 24,
