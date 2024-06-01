@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   Modal,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function CreateBingo() {
   const [gameName, setGameName] = useState('');
@@ -19,14 +20,19 @@ export default function CreateBingo() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const addItem = () => {
-    if (title === '' || description === '') return;
+    if (title === '') return;
 
     if (items.length >= 9) {
       return Alert.alert('Error', 'You can only add 9 items.');
     }
 
     setItems([...items, { id: items.length + 1, title, description }]);
+    saveData();
     setTitle('');
     setDescription('');
   };
@@ -44,14 +50,40 @@ export default function CreateBingo() {
   );
 
   // Here you can navigate to another screen or perform any other action
-  const handleFinalize = () =>
+  const handleFinalize = () => {
+    saveData();
     Alert.alert('Game Ready', `Game "${gameName}" is ready with 9 items.`);
-
+  };
   const deleteThisItem = (itemId) => {
     setItems(items.filter((item) => item.id !== itemId));
+    saveData();
     setModalVisible(false);
   };
 
+  const saveData = async () => {
+    try {
+      await AsyncStorage.setItem('gameName', gameName);
+      await AsyncStorage.setItem('items', JSON.stringify(items));
+    } catch (error) {
+      console.error('Failed to save data', error);
+    }
+  };
+
+  const loadData = async () => {
+    try {
+      const savedGameName = await AsyncStorage.getItem('gameName');
+      const savedItems = await AsyncStorage.getItem('items');
+
+      if (savedGameName !== null) {
+        setGameName(savedGameName);
+      }
+      if (savedItems !== null) {
+        setItems(JSON.parse(savedItems));
+      }
+    } catch (error) {
+      console.error('Failed to load data', error);
+    }
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bingo Game Setup</Text>
