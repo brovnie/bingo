@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Slot, Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 
@@ -34,9 +34,7 @@ export default function RootLayout() {
 
   return (
     <AuthContext.Provider value={{ userToken, setUserToken }}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
+      <Slot />
     </AuthContext.Provider>
   );
 }
