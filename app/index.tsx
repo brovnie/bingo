@@ -16,7 +16,6 @@ export default function Index() {
 
   //redirect
   useEffect(() => {
-    console.warn(userToken);
     if (!isLoading && userToken !== undefined) {
       if (userToken === null) {
         router.replace('/login');
