@@ -13,16 +13,11 @@ export default function login() {
   const [userName, setUserName] = useState('');
   const [passWord, setPassWord] = useState('');
 
-  const passwordRef = useRef(null);
-  const usernameRef = useRef(null);
-
   const auth = firebase_auth;
 
   const handleLogin = async () => {
     if (userName === '' || !userName) return;
     if (passWord === '' || !passWord) return;
-    // if (usernameRef.current === null || !usernameRef.current) return;
-    // if (passwordRef.current === null || !passwordRef.current) return;
 
     signInWithEmailAndPassword(auth, userName, passWord)
       .then((user) => setUserToken(user))
@@ -33,22 +28,16 @@ export default function login() {
         if (error.code === 'auth/invalid-email')
           return Alert.alert('That email address is invalid!');
 
-        Alert.alert(error);
+        Alert.alert(`Miscellaneous error: ${error.code.split('auth/')[0]}`);
       });
   };
 
   const handleSignup = async () => {
-    if (usernameRef.current === null || !usernameRef.current) return;
-    if (passwordRef.current === null || !passwordRef.current) return;
+    if (userName === '' || !userName) return;
+    if (passWord === '' || !passWord) return;
 
-    await createUserWithEmailAndPassword(
-      auth,
-      usernameRef.current,
-      passwordRef.current
-    )
-      .then((user) => {
-        setUserToken(user);
-      })
+    await createUserWithEmailAndPassword(auth, userName, passWord)
+      .then((user) => setUserToken(user))
       .catch((error) => {
         if (error.code === 'auth/email-already-in-use')
           return Alert.alert('That email address is already in use!');
@@ -56,7 +45,7 @@ export default function login() {
         if (error.code === 'auth/invalid-email')
           return Alert.alert('That email address is invalid!');
 
-        Alert.alert(error);
+        Alert.alert(`Miscellaneous error: ${error.code.split('auth/')[0]}`);
       });
   };
 
@@ -67,11 +56,9 @@ export default function login() {
         placeholder="Type in your email"
         value={userName}
         onChangeText={setUserName}
-        //  ref={usernameRef}
       />
       <TextInput
         placeholder="Type in your password"
-        // ref={passwordRef}
         value={passWord}
         onChangeText={setPassWord}
         secureTextEntry
