@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
+// import { Redirect, router } from 'expo-router';
 
 export default function login() {
   const { setUserToken } = useContext(AuthContext);
@@ -21,6 +22,7 @@ export default function login() {
 
     signInWithEmailAndPassword(auth, userName, passWord)
       .then((user) => setUserToken(user))
+      .then(() => router.push('/createBingo'))
       .catch((error) => {
         if (error.code === 'auth/email-already-in-use')
           return Alert.alert('That email address is already in use!');
@@ -28,7 +30,7 @@ export default function login() {
         if (error.code === 'auth/invalid-email')
           return Alert.alert('That email address is invalid!');
 
-        Alert.alert(`Miscellaneous error: ${error.code.split('auth/')[0]}`);
+        Alert.alert(`Miscellaneous error: ${error.code}`);
       });
   };
 
@@ -63,9 +65,9 @@ export default function login() {
         onChangeText={setPassWord}
         secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
+      <Button title="Login" onPress={() => handleLogin()} />
       <Text>Or</Text>
-      <Button title="Sign up" onPress={handleSignup} />
+      <Button title="Sign up" onPress={() => handleSignup()} />
     </View>
   );
 }

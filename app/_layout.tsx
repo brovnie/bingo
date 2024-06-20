@@ -1,10 +1,13 @@
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { Slot, Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 
 type AuthContextType = {
-  userToken: string | null;
-  setUserToken: React.Dispatch<React.SetStateAction<string | null>>;
+  userToken: FirebaseAuthTypes.UserCredential | null;
+  setUserToken: React.Dispatch<
+    React.SetStateAction<FirebaseAuthTypes.UserCredential | null>
+  >;
 };
 
 export const AuthContext = React.createContext<AuthContextType>({
@@ -13,13 +16,13 @@ export const AuthContext = React.createContext<AuthContextType>({
 });
 
 export default function RootLayout() {
-  const [userToken, setUserToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userToken, setUserToken] =
+    useState<FirebaseAuthTypes.UserCredential | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Simulate token retrieval
     setTimeout(() => {
-      setUserToken(null); // Replace this with actual token retrieval logic
       setIsLoading(false);
     }, 1000);
   }, []);
