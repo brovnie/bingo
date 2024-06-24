@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
-import { useRouter } from "expo-router";
+import { Slot, useRouter } from "expo-router";
 import { AuthContext } from "./_layout";
+import React from "react";
 
 export default function Index() {
   const router = useRouter();
@@ -17,12 +18,14 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
-    if (userToken !== undefined) {
-      userToken !== null
-        ? router.replace("/createBingo")
-        : router.replace("/login");
+    if (!isLoading && userToken !== undefined) {
+      if (userToken === null) {
+        router.replace("/login");
+      } else {
+        router.replace("/createBingo");
+      }
     }
   }, [isLoading, userToken, router]);
 
-  return null;
+  return <Slot />;
 }
