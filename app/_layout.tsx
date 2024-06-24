@@ -14,8 +14,7 @@ type AuthContextType = {
   userToken: FirebaseAuthTypes.UserCredential | null;
   setUserToken: (email: string, pw: string) => void;
   createUser: (email: string, pw: string) => void;
-  clearUserToken: (userId: string) => void;
-  isLoading: boolean;
+  clearUserToken: () => void;
 };
 
 export const AuthContext = React.createContext<AuthContextType>({
@@ -23,7 +22,6 @@ export const AuthContext = React.createContext<AuthContextType>({
   setUserToken: (email: string, pw: string) => null,
   createUser: (email: string, pw: string) => null,
   clearUserToken: () => null,
-  isLoading: true,
 });
 
 export default function RootLayout() {
@@ -39,12 +37,15 @@ export default function RootLayout() {
     });
   }, []);
 
-  const handleLogin = async (email: string, pw: string) => {
+  const handleLogin = (email: string, pw: string) => {
     if (email === "" || !email) return;
     if (pw === "" || !pw) return;
 
-    await signInWithEmailAndPassword(auth, email, pw)
+    signInWithEmailAndPassword(auth, email, pw)
       .then((user) => setUserToken(user))
+      .then(() => {
+        router.replace("/createBingo");
+      })
       .catch((error) => {
         if (error.code === "auth/email-already-in-use")
           return Alert.alert("That email address is already in use!");
@@ -56,12 +57,15 @@ export default function RootLayout() {
       });
   };
 
-  const handleSignup = async (email: string, pw: string) => {
+  const handleSignup = (email: string, pw: string) => {
     if (email === "" || !email) return;
     if (pw === "" || !pw) return;
 
-    await createUserWithEmailAndPassword(auth, email, pw)
+    createUserWithEmailAndPassword(auth, email, pw)
       .then((user) => setUserToken(user))
+      .then(() => {
+        router.replace("/createBingo");
+      })
       .catch((error) => {
         if (error.code === "auth/email-already-in-use")
           return Alert.alert("That email address is already in use!");
@@ -73,8 +77,10 @@ export default function RootLayout() {
       });
   };
 
-  const handleLogOut = async () => {
-    await signOut(auth).finally(() => router.replace("/login"));
+  const handleLogOut = () => {
+    signOut(auth);
+    setUserToken(null);
+    router.replace("/login");
   };
 
   return isLoading ? (
@@ -85,8 +91,8 @@ export default function RootLayout() {
     <AuthContext.Provider
       value={{
         userToken,
-        setUserToken: () => handleLogin(email, pw),
-        createUser: () => handleSignup(email, pw),
+        setUserToken: () => handleLogin,
+        createUser: () => handleSignup,
         clearUserToken: () => handleLogOut(),
       }}
     >
