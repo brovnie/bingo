@@ -1,21 +1,6 @@
-import { useContext, useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
-import { AuthContext } from './_layout';
-
-// export default function Index() {
-//   const router = useRouter();
-//   const { userToken } = useContext(AuthContext);
-
-//   useEffect(() => {
-//     if (userToken !== undefined) {
-//       userToken === null
-//         ? router.replace('/login')
-//         : router.replace('/createBingo');
-//     }
-//   }, [userToken]);
-
-//   return null;
-// }
+import { useContext, useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+import { AuthContext } from "./_layout";
 
 export default function Index() {
   const router = useRouter();
@@ -23,24 +8,19 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate token retrieval
-
-    // get user token from persistence if exists
-
+    // TODO: fix bug with rendering before firebase
+    // is able to fetch data from persistence
+    // or implement a splash / logo animation?
     setTimeout(() => {
       setIsLoading(false);
     }, 1000);
   }, []);
 
-  //redirect
   useEffect(() => {
-    // redirect to createbingo
-    if (!isLoading && userToken !== undefined) {
-      if (userToken === null) {
-        router.replace('/login');
-      } else {
-        router.replace('/createBingo');
-      }
+    if (userToken !== undefined) {
+      userToken !== null
+        ? router.replace("/createBingo")
+        : router.replace("/login");
     }
   }, [isLoading, userToken, router]);
 
