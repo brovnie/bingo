@@ -9,14 +9,16 @@ import {
   TouchableOpacity,
   Modal,
   KeyboardAvoidingView,
-} from 'react-native';
-import React, { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+} from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthContext } from "./_layout";
 
 export default function CreateBingo() {
-  const [gameName, setGameName] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const { clearUserToken } = useContext(AuthContext);
+  const [gameName, setGameName] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [items, setItems] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -26,22 +28,22 @@ export default function CreateBingo() {
   }, []);
 
   const addItem = () => {
-    if (title === '') return;
+    if (title === "") return;
 
     if (items.length >= 9)
-      return Alert.alert('Error', 'You can only add 9 items.');
+      return Alert.alert("Error", "You can only add 9 items.");
 
     // save data bugs out on 9th element
     const newItems = [...items, { id: getNextID(), title, description }];
     setItems(newItems);
     try {
-      AsyncStorage.setItem('items', JSON.stringify(newItems));
+      AsyncStorage.setItem("items", JSON.stringify(newItems));
     } catch (error) {
-      console.error('Failed to save data', error);
+      console.error("Failed to save data", error);
     }
 
-    setTitle('');
-    setDescription('');
+    setTitle("");
+    setDescription("");
   };
 
   const getNextID = () => {
@@ -68,7 +70,7 @@ export default function CreateBingo() {
   // TODO: navigate to another screen
   const handleFinalize = () => {
     saveData();
-    Alert.alert('Game Ready', `Game "${gameName}" is ready with 9 items.`);
+    Alert.alert("Game Ready", `Game "${gameName}" is ready with 9 items.`);
 
     // TODO: navigate after 3 secs to the game
     // https://docs.expo.dev/router/reference/redirects/
@@ -79,40 +81,40 @@ export default function CreateBingo() {
     const newItems = items.filter((item) => item.id !== itemId);
     setItems(newItems);
     try {
-      AsyncStorage.setItem('items', JSON.stringify(newItems));
+      AsyncStorage.setItem("items", JSON.stringify(newItems));
     } catch (error) {
-      console.error('Failed to save data', error);
+      console.error("Failed to save data", error);
     }
     setModalVisible(false);
   };
 
   const saveData = async () => {
     try {
-      await AsyncStorage.setItem('gameName', gameName);
-      await AsyncStorage.setItem('items', JSON.stringify(items));
+      await AsyncStorage.setItem("gameName", gameName);
+      await AsyncStorage.setItem("items", JSON.stringify(items));
     } catch (error) {
-      console.error('Failed to save data', error);
+      console.error("Failed to save data", error);
     }
   };
 
   const loadData = async () => {
     try {
-      const savedGameName = await AsyncStorage.getItem('gameName');
-      const savedItems = await AsyncStorage.getItem('items');
+      const savedGameName = await AsyncStorage.getItem("gameName");
+      const savedItems = await AsyncStorage.getItem("items");
 
       if (savedGameName !== null) setGameName(savedGameName);
       if (savedItems !== null) setItems(JSON.parse(savedItems));
     } catch (error) {
-      console.error('Failed to load data', error);
+      console.error("Failed to load data", error);
     }
   };
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
       <View style={styles.container}>
         <Text style={styles.title}>Bingo Game Setup</Text>
         <TextInput
           style={styles.input}
-          placeholder="Game Name"
+          placeholder='Game Name'
           value={gameName}
           onChangeText={setGameName}
         />
@@ -120,22 +122,27 @@ export default function CreateBingo() {
           <>
             <TextInput
               style={styles.input}
-              placeholder="Item Title"
+              placeholder='Item Title'
               value={title}
               onChangeText={setTitle}
             />
             <TextInput
               style={styles.input}
-              placeholder="Item Description"
+              placeholder='Item Description'
               value={description}
               onChangeText={setDescription}
             />
-            <Button title="Add Item" onPress={addItem} />
+            <Button title='Add Item' onPress={addItem} />
           </>
         )}
         {items.length === 9 && (
-          <Button title="Finalize" onPress={handleFinalize} />
+          <Button title='Finalize' onPress={handleFinalize} />
         )}
+        <Button
+          title='Log out'
+          style={styles.deleteButton}
+          onPress={() => clearUserToken()}
+        />
         {items.length > 0 && (
           <View style={styles.grid}>
             <FlatList
@@ -148,7 +155,7 @@ export default function CreateBingo() {
         )}
 
         <Modal
-          animationType="slide"
+          animationType='slide'
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => setModalVisible(false)}
@@ -188,7 +195,7 @@ export default function CreateBingo() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
     marginTop: 40,
   },
@@ -197,9 +204,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    width: '100%',
+    width: "100%",
     height: 40,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
@@ -207,7 +214,7 @@ const styles = StyleSheet.create({
   },
   finalizeContainer: {
     marginTop: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   grid: {
     marginTop: 20,
@@ -215,10 +222,10 @@ const styles = StyleSheet.create({
   gridItem: {
     width: 100,
     height: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#000',
+    borderColor: "#000",
     margin: 5,
   },
   gridItemText: {
@@ -226,16 +233,16 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
     width: 300,
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 24,
@@ -246,24 +253,24 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginTop: 20,
   },
   deleteButton: {
-    backgroundColor: 'red',
+    backgroundColor: "red",
     padding: 10,
     borderRadius: 5,
     margin: 5,
   },
   closeButton: {
-    backgroundColor: 'black',
+    backgroundColor: "black",
     padding: 10,
     borderRadius: 5,
     margin: 5,
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
   },
 });
