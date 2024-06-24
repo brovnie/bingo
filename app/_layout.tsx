@@ -1,5 +1,5 @@
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { Slot } from "expo-router";
+import { Slot, router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { firebase_auth } from "../firebaseConfig";
@@ -7,6 +7,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
+  signOut,
 } from "firebase/auth";
 
 type AuthContextType = {
@@ -21,7 +22,7 @@ export const AuthContext = React.createContext<AuthContextType>({
   userToken: null,
   setUserToken: (email: string, pw: string) => null,
   createUser: (email: string, pw: string) => null,
-  clearUserToken: (userId: string) => null,
+  clearUserToken: () => null,
   isLoading: true,
 });
 
@@ -39,34 +40,27 @@ export default function RootLayout() {
   }, []);
 
   const handleLogin = async (email: string, pw: string) => {
-    const [userName, setUserName] = useState("");
-    const [passWord, setPassWord] = useState("");
+    if (email === "" || !email) return;
+    if (pw === "" || !pw) return;
 
-    const auth = firebase_auth;
+    await signInWithEmailAndPassword(auth, email, pw)
+      .then((user) => setUserToken(user))
+      .catch((error) => {
+        if (error.code === "auth/email-already-in-use")
+          return Alert.alert("That email address is already in use!");
 
-    const handleLogin = async () => {
-      if (userName === "" || !userName) return;
-      if (passWord === "" || !passWord) return;
+        if (error.code === "auth/invalid-email")
+          return Alert.alert("That email address is invalid!");
 
-      await signInWithEmailAndPassword(auth, userName, passWord)
-        .then((user) => setUserToken(user))
-        .catch((error) => {
-          if (error.code === "auth/email-already-in-use")
-            return Alert.alert("That email address is already in use!");
-
-          if (error.code === "auth/invalid-email")
-            return Alert.alert("That email address is invalid!");
-
-          Alert.alert(`Miscellaneous error: ${error.code}`);
-        });
-    };
+        Alert.alert(`Miscellaneous error: ${error.code}`);
+      });
   };
 
   const handleSignup = async (email: string, pw: string) => {
-    if (userName === "" || !userName) return;
-    if (passWord === "" || !passWord) return;
+    if (email === "" || !email) return;
+    if (pw === "" || !pw) return;
 
-    await createUserWithEmailAndPassword(auth, userName, passWord)
+    await createUserWithEmailAndPassword(auth, email, pw)
       .then((user) => setUserToken(user))
       .catch((error) => {
         if (error.code === "auth/email-already-in-use")
@@ -78,7 +72,10 @@ export default function RootLayout() {
         Alert.alert(`Miscellaneous error: ${error.code.split("auth/")[0]}`);
       });
   };
-  const handleLogOut = async (userId: string) => {};
+
+  const handleLogOut = async () => {
+    await signOut(auth).finally(() => router.replace("/login"));
+  };
 
   return isLoading ? (
     <View style={styles.loadingContainer}>
@@ -90,7 +87,7 @@ export default function RootLayout() {
         userToken,
         setUserToken: () => handleLogin(email, pw),
         createUser: () => handleSignup(email, pw),
-        clearUserToken: () => handleLogOut(userId),
+        clearUserToken: () => handleLogOut(),
       }}
     >
       <Slot />
