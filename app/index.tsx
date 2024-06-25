@@ -1,7 +1,7 @@
-import { useContext, useEffect, useState } from "react";
-import { Slot, useRouter } from "expo-router";
-import { AuthContext } from "./_layout";
-import React from "react";
+import { useContext, useEffect, useState } from 'react';
+import { Slot, useRouter } from 'expo-router';
+import { AuthContext } from './_layout';
+import React from 'react';
 
 export default function Index() {
   const router = useRouter();
@@ -20,9 +20,9 @@ export default function Index() {
   useEffect(() => {
     if (!isLoading && userToken !== undefined) {
       if (userToken === null) {
-        router.replace("/login");
+        router.replace('/login');
       } else {
-        router.replace("/createBingo");
+        router.replace('/createBingo');
       }
     }
   }, [isLoading, userToken, router]);
