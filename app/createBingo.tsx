@@ -10,10 +10,12 @@ import {
   Modal,
   KeyboardAvoidingView,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthContext } from './_layout';
 
 export default function CreateBingo() {
+  const { clearUserToken } = useContext(AuthContext);
   const [gameName, setGameName] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -28,17 +30,16 @@ export default function CreateBingo() {
   const addItem = () => {
     if (title === '') return;
 
-    if (items.length >= 9) {
+    if (items.length >= 9)
       return Alert.alert('Error', 'You can only add 9 items.');
-    }
 
     // save data bugs out on 9th element
     const newItems = [...items, { id: getNextID(), title, description }];
     setItems(newItems);
     try {
-      AsyncStorage.setItem("items", JSON.stringify(newItems));
+      AsyncStorage.setItem('items', JSON.stringify(newItems));
     } catch (error) {
-      console.error("Failed to save data", error);
+      console.error('Failed to save data', error);
     }
 
     setTitle('');
@@ -69,7 +70,10 @@ export default function CreateBingo() {
   // TODO: navigate to another screen
   const handleFinalize = () => {
     saveData();
-    Alert.alert("Game Ready", `Game "${gameName}" is ready with 9 items.`);
+    Alert.alert('Game Ready', `Game "${gameName}" is ready with 9 items.`);
+
+    // TODO: navigate after 3 secs to the game
+    // https://docs.expo.dev/router/reference/redirects/
   };
 
   const deleteThisItem = (itemId) => {
@@ -77,9 +81,9 @@ export default function CreateBingo() {
     const newItems = items.filter((item) => item.id !== itemId);
     setItems(newItems);
     try {
-      AsyncStorage.setItem("items", JSON.stringify(newItems));
+      AsyncStorage.setItem('items', JSON.stringify(newItems));
     } catch (error) {
-      console.error("Failed to save data", error);
+      console.error('Failed to save data', error);
     }
     setModalVisible(false);
   };
@@ -98,18 +102,14 @@ export default function CreateBingo() {
       const savedGameName = await AsyncStorage.getItem('gameName');
       const savedItems = await AsyncStorage.getItem('items');
 
-      if (savedGameName !== null) {
-        setGameName(savedGameName);
-      }
-      if (savedItems !== null) {
-        setItems(JSON.parse(savedItems));
-      }
+      if (savedGameName !== null) setGameName(savedGameName);
+      if (savedItems !== null) setItems(JSON.parse(savedItems));
     } catch (error) {
       console.error('Failed to load data', error);
     }
   };
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding'>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <View style={styles.container}>
         <Text style={styles.title}>Bingo Game Setup</Text>
         <TextInput
@@ -138,6 +138,11 @@ export default function CreateBingo() {
         {items.length === 9 && (
           <Button title="Finalize" onPress={handleFinalize} />
         )}
+        <Button
+          title="Log out"
+          style={styles.deleteButton}
+          onPress={() => clearUserToken()}
+        />
         {items.length > 0 && (
           <View style={styles.grid}>
             <FlatList
